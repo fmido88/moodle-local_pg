@@ -75,10 +75,21 @@ class pages extends table_sql {
      * @return void
      */
     protected function set_our_sql() {
-        $pagesfields = ['id', 'shortname', 'header as title', 'layout', 'visible', 'pnav', 'snav', 'parent', 'timecreated', 'timemodified'];
-        $userfields  = \core_user\fields::for_name();
-        $ufields     = $userfields->get_sql('u', true, '', 'userid', false)->selects;
-        $pfields     = implode(', ', array_map(function ($value) {
+        $pagesfields = [
+            'id',
+            'shortname',
+            'header as title',
+            'layout',
+            'visible',
+            'pnav',
+            'snav',
+            'parent',
+            'timecreated',
+            'timemodified',
+        ];
+        $userfields = \core_user\fields::for_name();
+        $ufields    = $userfields->get_sql('u', true, '', 'userid', false)->selects;
+        $pfields    = implode(', ', array_map(function ($value) {
             return 'p.' . $value;
         }, $pagesfields));
         $selects = $pfields . ', ' . $ufields;

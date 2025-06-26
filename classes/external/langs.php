@@ -47,7 +47,7 @@ class langs extends external_api {
      */
     public static function get_content($id, $lang) {
         global $DB;
-        $params = self::validate_parameters(self::get_content_parameters(), compact('id','lang'));
+        $params = self::validate_parameters(self::get_content_parameters(), compact('id', 'lang'));
 
         $context = \local_pg\context\page::instance($params['id']);
         self::validate_context($context);
@@ -84,8 +84,8 @@ class langs extends external_api {
      */
     public static function get_content_returns(): external_single_structure {
         return new external_single_structure([
-            'header' => new external_value(PARAM_TEXT,''),
-            'content'=> new external_value(PARAM_RAW, ''),
+            'header' => new external_value(PARAM_TEXT, 'The page header'),
+            'content' => new external_value(PARAM_RAW, 'The page content'),
         ]);
     }
 }

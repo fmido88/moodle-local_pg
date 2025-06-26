@@ -24,13 +24,13 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_pg';
-$plugin->release = '1.0.0';
-$plugin->version = 2025020201;
-$plugin->requires = 2024100700;
-$plugin->maturity = MATURITY_BETA;
+$plugin->component    = 'local_pg';
+$plugin->release      = '1.0.0';
+$plugin->version      = 2025020201;
+$plugin->requires     = 2024100700;
+$plugin->maturity     = MATURITY_BETA;
 $plugin->dependencies = [
-    'editor_atto' => ANY_VERSION,
+    'editor_atto'              => ANY_VERSION,
     'tool_htmlbootstrapeditor' => 2023101904,
     'atto_htmlbootstrapeditor' => 2023032803,
 ];

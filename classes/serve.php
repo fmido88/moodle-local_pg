@@ -305,7 +305,8 @@ class serve implements cacheable_object {
      * Make an instance of this class.
      * @param  ?int  $pageid
      * @param  bool  $loadcontent load the page content, js, css or not
-     * @param ?string $shortname if the shortname specified the id of the page will be ignored in case if it is not existed in the cache.
+     * @param ?string $shortname if the shortname specified the id of the page will be ignored
+     *                           in case if it is not existed in the cache.
      * @return serve
      */
     public static function make($pageid = null, $loadcontent = true, $shortname = null): self {
@@ -327,12 +328,11 @@ class serve implements cacheable_object {
 
             // Todo: get the page by its path.
             $path = "/{$shortname}";
-            while($parent = array_pop($args)) {
+            while ($parent = array_pop($args)) {
                 $path = "/{$parent}{$path}";
             }
         }
 
-        
         if ($shortname && isset(static::$cached[$shortname])) {
             return static::$cached[$shortname];
         }
@@ -511,7 +511,6 @@ class serve implements cacheable_object {
         if (isset($this->exist)) {
             return $this->exist;
         }
-
 
         if (empty($this->args)) {
 

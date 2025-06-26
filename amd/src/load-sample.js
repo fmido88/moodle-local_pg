@@ -28,6 +28,9 @@ import Ajax from 'core/ajax';
  */
 let select;
 
+/**
+ * Load a sample page from file.
+ */
 async function loadSample() {
     const request = Ajax.call([{
         methodname: 'local_pg_load_sample',
@@ -36,7 +39,6 @@ async function loadSample() {
         },
     }]);
     const response = await request[0];
-
 }
 export const init = function() {
     select = $('select[name=sample]');

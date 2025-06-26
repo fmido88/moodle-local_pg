@@ -129,8 +129,8 @@ class helper {
      */
     public static function get_pages_options() {
         global $DB;
-        $sort = 'shortname ASC, path ASC, id ASC';
-        $fields = 'id, shortname, path, header';
+        $sort    = 'shortname ASC, path ASC, id ASC';
+        $fields  = 'id, shortname, path, header';
         $pages   = $DB->get_records('local_pg_pages', ['parent' => 0], $sort, $fields);
         $options = [
             0 => get_string('home'),
@@ -148,30 +148,39 @@ class helper {
     }
 
     /**
-     * Summary of format_page_path
-     * @param object{shortname: string, parent: int} $data
+     * Summary of format_page_path.
+     * @param  stdClass $data {shortname:string, parent:int}
      * @return string
      */
     public static function format_page_path(stdClass &$data) {
         global $DB;
-        $path = "\\{$data->shortname}";
+        $path     = "\\{$data->shortname}";
         $parentid = $data->parent;
-        while($parentid && ($parent = $DB->get_record('local_pg_pages', ['id' => $data->parent], 'shortname, path, parent'))) {
-            $path = "\\{$parent->shortname}" . $path;
+
+        while ($parentid && ($parent = $DB->get_record('local_pg_pages', ['id' => $data->parent], 'shortname, path, parent'))) {
+            $path     = "\\{$parent->shortname}" . $path;
             $parentid = $parent->parent;
         }
 
         $data->path = $path;
+
         return $path;
     }
 
+    /**
+     * Fix pages paths.
+     * This is used to fix the path of all pages in the system.
+     * It will update the path of each page based on its parent and shortname.
+     */
     public static function fix_pages_paths() {
         global $DB;
-        $tr = $DB->start_delegated_transaction();
+        $tr    = $DB->start_delegated_transaction();
         $pages = $DB->get_records('local_pg_pages', null, '', 'id, parent, shortname, path');
+
         foreach ($pages as $page) {
             $oldpath = clone $page->path;
             $newpath = self::format_page_path($page);
+
             if ($oldpath != $newpath) {
                 $DB->update_record('local_pg_pages', $page);
             }

@@ -30,11 +30,20 @@ use core_external\external_value;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class load_samples extends external_api {
+    /**
+     * Parameters description for ::load
+     * @return external_function_parameters
+     */
     public static function load_parameters() {
         return new external_function_parameters([
             'name' => new external_value(PARAM_ALPHANUMEXT, 'name of the sample'),
         ]);
     }
+    /**
+     * Load a sample by name
+     * @param string $name
+     * @return array{html: string, js: string, css: string}
+     */
     public static function load($name) {
         global $CFG;
         $name = self::validate_parameters(self::load_parameters(), ['name' => $name])['name'];
@@ -52,7 +61,7 @@ class load_samples extends external_api {
         $result = [
             'html' => '',
             'js'   => '',
-            'css'  => ''
+            'css'  => '',
         ];
 
         foreach ($matches as $match) {
@@ -61,6 +70,10 @@ class load_samples extends external_api {
 
         return $result;
     }
+    /**
+     * Returns description of method result value
+     * @return external_single_structure
+     */
     public static function load_returns() {
         return new external_single_structure([
             'html' => new external_value(PARAM_RAW, 'html'),

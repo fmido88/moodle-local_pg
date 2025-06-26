@@ -32,7 +32,7 @@ $functions = [
         'classname'  => local_pg\external\langs::class,
         'methodname' => 'get_content',
         'type'       => 'read',
-        'ajax'       => true, 
+        'ajax'       => true,
     ],
     'local_pg_get_sample' => [
         'classname'  => local_pg\external\load_samples::class,

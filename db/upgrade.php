@@ -39,7 +39,6 @@ function xmldb_local_pg_upgrade($oldversion) {
     // You will also have to create the db/install.xml file by using the XMLDB Editor.
     // Documentation for the XMLDB Editor can be found at {@link https://docs.moodle.org/dev/XMLDB_editor}.
     if ($oldversion < 2025020200) {
-
         // Define table local_pg_langs to be created.
         $table = new xmldb_table('local_pg_langs');
 
@@ -66,6 +65,6 @@ function xmldb_local_pg_upgrade($oldversion) {
         // Page savepoint reached.
         upgrade_plugin_savepoint(true, 2025020200, 'local', 'page');
     }
-    
+
     return true;
 }

@@ -103,7 +103,6 @@ class page_edit extends \moodleform {
         $mform->addElement('checkbox', 'snav', '', get_string('snav', 'local_pg'));
         $mform->disabledIf('snav', 'lang', 'noteq', '');
 
-
         // Page layout.
         $loptions = \local_pg\helper::get_layout_options();
         $mform->addElement('select', 'layout', get_string('layout', 'local_pg'), $loptions);
@@ -120,7 +119,6 @@ class page_edit extends \moodleform {
         }
 
         $mform->addElement('editor', 'content_editor', get_string('content', 'local_pg'), [], $editoroptions);
-        // $mform->addRule('content_editor', get_string('required'), 'required', null, 'client');
 
         // Css editor.
         $mform->addElement('textarea', 'css', get_string('css', 'local_pg'), ['height' => '300px']);
