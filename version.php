@@ -26,7 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin->component    = 'local_pg';
 $plugin->release      = '1.0.0';
-$plugin->version      = 2025020201;
+$plugin->version      = 2025062700;
 $plugin->requires     = 2024100700;
 $plugin->maturity     = MATURITY_BETA;
 $plugin->dependencies = [
