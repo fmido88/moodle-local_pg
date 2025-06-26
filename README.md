@@ -1,8 +1,20 @@
 # Pages #
 
-TODO Describe the plugin shortly here.
+Custom pages for moodle, with multilangs, custom contexts, blocks, selectable layout, custom js and css for each page, easy url and more.
 
-TODO Provide more detailed description here.
+Using atto HTML editor to create pages in moodle.
+- Create custom pages content from frontend.
+- Customize your page with css and js only applied to this page.
+- Add multilangs page contents.
+- Select your prefered layout.
+- Custom context for each page which allows adding blocks to each page individuly.
+- Prebuild contact us page.
+- Prebuild FAQ page.
+- Add pages in navbar.
+- Page content saved in cache for faster load.
+
+For advanced users:
+- Page content get rendered the same way mustache did so you can use {{config.}} or {{#str}} tags or anything else.
 
 ## Installing via uploaded ZIP file ##
 
