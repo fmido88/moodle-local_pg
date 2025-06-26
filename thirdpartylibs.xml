@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<libraries>
+  <library>
+    <location>vvveb</location>
+    <name>Vvveb</name>
+    <description>Editing page lib.</description>
+    <version>2.0.3</version>
+    <license>Apache 2.0</license>
+    <repository>https://github.com/givanz/VvvebJs</repository>
+    <copyrights>
+      <copyright>Givan (hi@vvveb.com)</copyright>
+    </copyrights>
+    <customised/>
+  </library>
+</libraries>
