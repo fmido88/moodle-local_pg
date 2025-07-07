@@ -30,33 +30,6 @@ require_once($CFG->libdir . '/formslib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class page_edit extends \moodleform {
-    /**
-     * Saving old user preference for html editor to det it back.
-     * We must use atto here.
-     * @var string
-     */
-    protected static $usereditorpreference;
-
-    /**
-     * Set user editor preference to atto.
-     * @return void
-     */
-    public static function set_editor_to_atto() {
-        if (!isset(self::$usereditorpreference)) {
-            self::$usereditorpreference = get_user_preferences('htmleditor');
-        }
-        set_user_preference('htmleditor', 'atto');
-    }
-
-    /**
-     * Return user editor preference to its older value.
-     * @return void
-     */
-    public static function return_user_preference() {
-        if (isset(self::$usereditorpreference) || is_null(self::$usereditorpreference ?? true)) {
-            set_user_preference('htmleditor', self::$usereditorpreference);
-        }
-    }
 
     /**
      * Definition.
@@ -180,15 +153,5 @@ class page_edit extends \moodleform {
         }
 
         return $errors;
-    }
-
-    /**
-     * Override to reset user editor preference.
-     * @return void
-     */
-    public function display() {
-        self::set_editor_to_atto();
-        parent::display();
-        self::return_user_preference();
     }
 }
