@@ -22,21 +22,37 @@
  */
 
 import $ from 'jquery';
-import Y from 'core/yui';
 import Modal from 'core/modal';
 import Prefetch from 'core/prefetch';
 import Ajax from 'core/ajax';
+/* eslint-disable camelcase */
+import {beautify} from './beautifier';
+let js_beautify = beautify.js;
+let css_beautify = beautify.css;
 
-// eslint-disable-next-line camelcase
 import {get_string} from 'core/str';
+/* eslint-enable camelcase */
+import {
+    EditorState,
+    EditorView,
+    basicSetup,
+    Compartment,
+    lang,
+} from './codemirror';
 
-Prefetch.prefetchStrings('local_pg', ['jssyntaxerror', 'csssyntaxerror']);
+
+Prefetch.prefetchStrings('local_pg', [
+    'jssyntaxerror',
+    'csssyntaxerror',
+]);
 
 /**
  * @type {Object}
  */
 let draftLangs = {};
 
+let cssEditorView;
+let jsEditorView;
 /**
  * Open a modal to preview the page.
  */
@@ -69,7 +85,12 @@ async function preview() {
 
     modal.show();
     $('[data-region="body"]').addClass('embed-responsive').addClass('embed-responsive-16by9');
-    $('[data-region="modal"]').attr('style', 'max-width: 100%; max-height: 100%; padding: 0; margin: 0;');
+    $('[data-region="modal"]').css({
+        'max-width': '100%',
+        'max-height': '100%',
+        'padding': '0',
+        'margin': '0'
+    });
 }
 
 /**
@@ -79,30 +100,32 @@ async function preview() {
 async function jsValidation(cm) {
     let errorPlaceholder = $('#js-text-error');
 
-    var code = cm.getValue();
+    var code = cm.state.doc.toString().trim();
     try {
         // Basic syntax check
         // eslint-disable-next-line no-new-func
         Function(code);
-        cm.save();
         errorPlaceholder.text('');
         errorPlaceholder.hide();
         $('input[type=submit]').removeAttr('disabled');
+        return true;
     } catch (e) {
         errorPlaceholder.text(await get_string('jssyntaxerror', 'local_pg', e.message));
         errorPlaceholder.show();
         $('input[type=submit]').attr('disabled', true);
+        return false;
     }
 }
 
 /**
  * Validate and save css code.
  * @param {CodeMirror} cm
+ * @return {Boolean}
  */
 async function validateCSS(cm) {
     let errorPlaceholder = $('#css-text-error');
 
-    let cssCode = cm.getValue().trim();
+    let cssCode = cm.state.doc.toString().trim();
     let errors = [];
 
     if (typeof window.CSSLint !== 'undefined') {
@@ -123,18 +146,40 @@ async function validateCSS(cm) {
     }
 
     if (errors.length > 0) {
-        errorPlaceholder.text(await get_string('csssyntaxerror', 'local_pg', errors.join("\n")));
+        errorPlaceholder.text(await get_string('csssyntaxerror', 'local_pg', errors.join("<br>\n")));
         errorPlaceholder.show();
+        return true;
     } else {
-        cm.save();
         errorPlaceholder.text('');
         errorPlaceholder.hide();
+        return false;
     }
+}
+/**
+ * @param {HTMLElement} textarea the text area element.
+ * @param {Function} validator function (validateCSS or ValidateJS).
+ * @returns
+ */
+function handleEditorUpdate(textarea, validator) {
+    return EditorView.updateListener.of(update => {
+        if (update.docChanged) {
+            let valid = validator(update);
+            if (!valid) {
+                return;
+            }
+
+            const newValue = update.state.doc.toString();
+
+            if (textarea.value !== newValue) {
+                textarea.value = newValue;
+            }
+        }
+    });
 }
 /**
  * Save draft values of langs in memory.
  */
-function savedraftlang() {
+function saveDraftLang() {
     let lang = $('[name=lang]').val();
     let title = $('[name=header]').val();
     let content = $('[name="content_editor[text]"]').val();
@@ -143,15 +188,11 @@ function savedraftlang() {
         header: title,
         content: content
     };
-    // eslint-disable-next-line no-console
-    console.log(draftLangs);
 }
 /**
  * Fires when the language changed.
  */
 async function changeLang() {
-    // eslint-disable-next-line no-console
-    console.log(draftLangs);
     let lang = $('[name=lang]').val();
     let disable = lang != "";
 
@@ -200,72 +241,98 @@ async function changeLang() {
 export const init = () => {
     // Must be sure that the dom is ready so codemirror is loaded.
     $(function() {
-        setTimeout(function() {
-            Y.use(['moodle-atto_html-codemirror', 'moodle-atto_html-beautify'], function(Y) {
-                var CodeMirror = Y.M.atto_html.CodeMirror;
-                var beautify = Y.M.atto_html.beautify;
-                // Load JavaScript mode
-                var jsTextarea = $('textarea[name="js"]');
-                let jsCodeMirror;
-                if (jsTextarea[0]) {
-                    beautify.js_beautify(jsTextarea.val(), {
-                        // eslint-disable-next-line camelcase
-                        indent_size: 4
-                    });
-                    jsCodeMirror = CodeMirror.fromTextArea(jsTextarea[0], {
-                        lineNumbers: true,
-                        mode: 'javascript',
-                        tabSize: 4,
-                        lineWrapping: true,
-                        indentWithTabs: false,
-                        spellcheck: true,
-                    });
-                    jsCodeMirror.setSize('100%', '300px');
-                    jsCodeMirror.on('change', jsValidation);
-                }
+        // Load JavaScript mode
+        let jsTextarea = document.querySelector('textarea[name="js"]');
+        const jsCompartment = new Compartment();
 
-                // Load CSS mode
-                var cssTextarea = $('textarea[name="css"]');
-                let cssCodeMirror;
-                if (cssTextarea[0]) {
-                    beautify.css_beautify(cssTextarea.val(), {
-                        // eslint-disable-next-line camelcase
-                        indent_size: 2
-                    });
-                    cssCodeMirror = CodeMirror.fromTextArea(cssTextarea[0], {
-                        lineNumbers: true,
-                        mode: 'css',
-                        tabSize: 2,
-                        lineWrapping: true,
-                        indentWithTabs: false,
-                        spellcheck: true,
-                    });
-                    cssCodeMirror.setSize('100%', '300px');
-                    cssCodeMirror.on('change', validateCSS);
-                }
-
-                // I need to freeze the Codemirror textarea so that the user can't change the code if selected lang not ''.
-                let langInput = $('[name=lang]');
-                langInput.on('change', function() {
-                    let readOnly = $(this).val() !== ''; // Read-only if lang is not empty
-                    if (jsCodeMirror) {
-                        jsCodeMirror.setOption("readOnly", readOnly);
-                    }
-                    if (cssCodeMirror) {
-                        cssCodeMirror.setOption("readOnly", readOnly);
-                    }
-                    changeLang();
-                });
-
+        const editorStyle = EditorView.theme({
+                            '&': {
+                                height: '300px',
+                                width: '100%',
+                                border: '1px solid #8f959e',
+                                borderRadius: '0.5rem',
+                            },
+                        });
+        if (jsTextarea) {
+            const beautifiedJS = js_beautify(jsTextarea.value, {
+                indent_size: 4
             });
-        }, 1000);
+            jsTextarea.value = beautifiedJS;
+
+            // Create a container for CodeMirror (next to the textarea)
+            const jsContainer = document.createElement('div');
+            jsContainer.style.width = '100%';
+            jsTextarea.style.display = 'none';
+            jsTextarea.parentNode.insertBefore(jsContainer, jsTextarea.nextSibling);
+
+            jsEditorView = new EditorView({
+                state: EditorState.create({
+                    doc: beautifiedJS,
+                    extensions: [
+                        basicSetup,
+                        editorStyle,
+                        lang.javascript(),
+                        jsCompartment.of([]),
+                        handleEditorUpdate(jsTextarea, jsValidation)
+                    ]
+                }),
+                parent: jsContainer
+            });
+        }
+
+        // Load CSS mode
+        let cssTextarea = document.querySelector('textarea[name="css"]');
+        const cssCompartment = new Compartment();
+
+        if (cssTextarea) {
+            const beautifiedCSS = css_beautify(cssTextarea.value, {
+                indent_size: 2
+            });
+            cssTextarea.value = beautifiedCSS;
+
+            const cssContainer = document.createElement('div');
+            cssContainer.style.width = '100%';
+            cssTextarea.style.display = 'none';
+            cssTextarea.parentNode.insertBefore(cssContainer, cssTextarea.nextSibling);
+
+            cssEditorView = new EditorView({
+                state: EditorState.create({
+                    doc: beautifiedCSS,
+                    extensions: [
+                        basicSetup,
+                        lang.css(),
+                        editorStyle,
+                        cssCompartment.of([]),
+                        handleEditorUpdate(cssTextarea, validateCSS)
+                    ]
+                }),
+                parent: cssContainer
+            });
+        }
+
+        // I need to freeze the Codemirror textarea so that the user can't change the code if selected lang not ''.
+        let langInput = $('[name=lang]');
+        langInput.on('change', function() {
+            let readOnly = $(this).val() !== ''; // Read-only if lang is not empty
+            if (jsEditorView) {
+                jsEditorView.dispatch({
+                    effects: jsCompartment.reconfigure(readOnly ? EditorView.editable.of(false) : [])
+                });
+            }
+            if (cssEditorView) {
+                cssEditorView.dispatch({
+                    effects: cssCompartment.reconfigure(readOnly ? EditorView.editable.of(false) : [])
+                });
+            }
+            changeLang();
+        });
 
         $('button[name="preview"]').on("click", function() {
             preview();
         });
 
-        $('[name="content_editor[text]"], [name="header"]').on('input, change', savedraftlang);
+        $('[name="content_editor[text]"], [name="header"]').on('input, change', saveDraftLang);
 
-        savedraftlang();
+        saveDraftLang();
     });
 };
