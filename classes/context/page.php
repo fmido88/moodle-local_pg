@@ -276,6 +276,8 @@ class page extends context {
             if (empty($levels) || !is_array($levels)) {
                 $levels = [];
             }
+        } else {
+            $levels = $CFG->custom_context_classes;
         }
 
         if (isset($levels[self::LEVEL])) {
