@@ -14,7 +14,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * TODO describe module load-sample
+ * TODO complete implantation of this module
+ * Load sample is meant to be use for loading the pre-saved samples into the
+ * page edit form.
  *
  * @module     local_pg/load-sample
  * @copyright  2025 Mohammad Farouk <phun.for.physics@gmail.com>
@@ -38,6 +40,7 @@ async function loadSample() {
             name: select.val(),
         },
     }]);
+    // eslint-disable-next-line no-unused-vars
     const response = await request[0];
 }
 export const init = function() {
