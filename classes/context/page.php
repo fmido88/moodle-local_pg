@@ -20,6 +20,12 @@ use coding_exception;
 use context;
 use moodle_url;
 
+defined('MOODLE_INTERNAL') || die();
+
+if (!defined('LOCAL_PG_CONTEXT_LEVEL')) {
+    page::create_custom_level();
+}
+
 /**
  * Class page
  *
@@ -32,7 +38,7 @@ class page extends context {
      * The context level.
      * @var int
      */
-    public const LEVEL = 13;
+    public const LEVEL = LOCAL_PG_CONTEXT_LEVEL;
     /**
      * Page record from local_pg_pages table.
      * @var stdClass
@@ -259,7 +265,7 @@ class page extends context {
      * Insert this custom context class and level in $CFG->custom_context_classes
      * @return void
      */
-    public static function insert_custom_level() {
+    protected static function insert_custom_level() {
         global $CFG;
         if (empty($CFG->custom_context_classes)) {
             $levels = [
@@ -289,5 +295,43 @@ class page extends context {
 
         set_config('custom_context_classes', serialize($levels));
         $CFG->custom_context_classes = $levels;
+    }
+
+    /**
+     * Create a custom context level constant which not interfere
+     * with any other plugin.
+     * @return int
+     */
+    public static function create_custom_level(): int {
+        // If already defined no need to redefine.
+        if (defined('LOCAL_PG_CONTEXT_LEVEL')) {
+            return LOCAL_PG_CONTEXT_LEVEL;
+        }
+
+        // Check the config store.
+        if ($level = get_config('local_pg', 'contextlevel')) {
+            define('LOCAL_PG_CONTEXT_LEVEL', (int)$level);
+            return (int)$level;
+        }
+
+        $levels = \context_helper::get_all_levels();
+        // Check if already exists in the custom levels.
+        foreach ($levels as $level => $class) {
+            if ($class === self::class) {
+                set_config('contextlevel', $level, 'local_pg');
+                define('LOCAL_PG_CONTEXT_LEVEL', (int)$level);
+                return (int)$level;
+            }
+        }
+
+        // Redefine a new context level and make sure it never been used by another system.
+        $level = 13;
+        while (array_key_exists($level, $levels) && $levels[$level] !== self::class) {
+            $level++;
+        }
+
+        define('LOCAL_PG_CONTEXT_LEVEL', $level);
+        set_config('contextlevel', $level, 'local_pg');
+        return $level;
     }
 }
