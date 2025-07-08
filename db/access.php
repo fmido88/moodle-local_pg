@@ -29,7 +29,7 @@ defined('MOODLE_INTERNAL') || die();
 
 $capabilities = [
     'local/pg:edit' => [
-        'riskbitmask' => RISK_MANAGETRUST | RISK_CONFIG | RISK_SPAM,
+        'riskbitmask' => RISK_MANAGETRUST | RISK_CONFIG | RISK_SPAM | RISK_XSS,
         'captype' => 'write',
         'contextlevel' => local_pg\context\page::LEVEL,
         'archetypes' => [
@@ -45,7 +45,7 @@ $capabilities = [
         ],
     ],
     'local/pg:add' => [
-        'riskbitmask' => RISK_MANAGETRUST | RISK_CONFIG | RISK_SPAM,
+        'riskbitmask' => RISK_MANAGETRUST | RISK_CONFIG | RISK_SPAM | RISK_XSS,
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,
         'archetypes' => [
