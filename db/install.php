@@ -27,5 +27,34 @@
  * Custom code to be run on installing the plugin.
  */
 function xmldb_local_pg_install() {
+    global $DB;
+    $dbman = $DB->get_manager();
+    $tables = [
+        'local_page_pages' => 'local_pg_pages',
+        'local_page_faq'   => 'local_pg_faq',
+        'local_page_langs' => 'local_pg_langs',
+    ];
+    // Migrate from the old plugin name to the new one.
+    foreach ($tables as $old => $new) {
+        if ($dbman->table_exists($old) && $dbman->table_exists($new)) {
+            // Check if the two tables having the same structures.
+            $oldfields = array_keys($DB->get_columns($old));
+            $newfields = array_keys($DB->get_columns($new));
+
+            if (count($oldfields) !== count($newfields)) {
+                continue;
+            }
+
+            foreach ($oldfields as $oldfield) {
+                if (!in_array($oldfield, $newfields)) {
+                    continue 2;
+                }
+            }
+
+            $records = $DB->get_records($old);
+            $DB->insert_records($new, $records);
+            $DB->delete_records($old);
+        }
+    }
     return true;
 }
