@@ -32,6 +32,8 @@ $confirm = optional_param('confirm', false, PARAM_BOOL);
 $page = $DB->get_record('local_pg_pages', ['id' => $id]);
 $context = local_pg\context\page::instance($id);
 
+require_capability('local/pg:delete', $context);
+
 if ($confirm && confirm_sesskey()) {
     $DB->delete_records('local_pg_pages', ['id' => $id]);
 
