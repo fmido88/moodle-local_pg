@@ -37,24 +37,28 @@ class support extends \moodleform {
         $mform       = $this->_form;
         $user        = $this->_customdata;
         $strrequired = get_string('required');
-        // phpcs:ignore moodle.Commenting.InlineComment.DocBlock
+        $strname     = get_string('name');
+        $stremail    = get_string('email');
+
+        // phpcs:disable moodle.Commenting.InlineComment.DocBlock
         /**
          * Name.
          * @var \HTML_QuickForm_text
          */
-        $name = $mform->createElement('text', 'name', get_string('name'), ['label' => get_string('name')]);
-        // phpcs:ignore moodle.Commenting.InlineComment.DocBlock
+        $name = $mform->createElement('text', 'name', $strname, ['label' => $strname, 'placeholder' => $strname]);
+
         /**
          * Email.
          * @var \HTML_QuickForm_text
          */
-        $email = $mform->createElement('text', 'email', get_string('email'), ['label' => get_string('name')]);
-        // phpcs:ignore moodle.Commenting.InlineComment.DocBlock
+        $email = $mform->createElement('text', 'email', $stremail, ['label' => $stremail, 'placeholder' => $stremail]);
+
         /**
          * Merge name and email to one group.
          * @var \HTML_QuickForm_group
          */
         $group = $mform->addGroup([$name, $email], 'name-email', '', null, false);
+        // phpcs:enable moodle.Commenting.InlineComment.DocBlock
 
         $mform->addGroupRule('name-email', [
             'name'  => [[$strrequired, 'required', null, 'client']],
