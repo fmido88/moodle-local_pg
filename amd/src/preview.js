@@ -68,6 +68,15 @@ async function preview() {
     url.searchParams.set("layout", $('[name="layout"]').val());
     url.searchParams.set("css", $('[name="css"]').val());
     url.searchParams.set("js", $('[name="js"]').val());
+    url.searchParams.set("sesskey", M.cfg.sesskey);
+    let idInput = $('input[name="id"]');
+
+    if (idInput.length == 1) {
+        let id = idInput.val();
+        if (id) {
+            url.searchParams.set("id", id);
+        }
+    }
 
     let lang = $('[name=lang]').val();
     if (lang) {

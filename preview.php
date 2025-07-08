@@ -21,12 +21,26 @@
  * @copyright  2025 Mohammad Farouk <phun.for.physics@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+use local_pg\context\page;
 use local_pg\helper;
 use local_pg\preview;
 
 require('../../config.php');
 
 require_login();
+confirm_sesskey();
+
+$id = optional_param('id', null, PARAM_INT);
+if ($id) {
+    $context = page::instance($id, IGNORE_MISSING);
+}
+
+if (empty($context)) {
+    $context = context_system::instance();
+    require_capability('local/pg:add', $context);
+} else {
+    require_capability('local/pg:edit', $context);
+}
 
 $params = [
     'shortname'     => required_param('shortname', PARAM_ALPHANUMEXT),
@@ -41,6 +55,7 @@ $params = [
 if (!empty($params['css']) && !helper::validate_css($params['css'])) {
     die('Not a valid css code.');
 }
+
 if (!empty($params['js']) && !helper::validate_js($params['js'])) {
     die('Not a valid js code.');
 }
