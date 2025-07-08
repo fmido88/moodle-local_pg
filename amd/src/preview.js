@@ -191,7 +191,11 @@ function handleEditorUpdate(textarea, validator) {
 function saveDraftLang() {
     let lang = $('[name=lang]').val();
     let title = $('[name=header]').val();
-    let content = $('[name="content_editor[text]"]').val();
+    let content = {
+        text: $('[name="content_editor[text]"]').val(),
+        format: $('[name="content_editor[format]"]').val(),
+        itemid: $('[name="content_editor[itemid]"]').val()
+    };
 
     draftLangs[lang] = {
         header: title,
@@ -213,8 +217,10 @@ async function changeLang() {
         }
 
         if (draftLangs[lang].content) {
-            $('[name="content_editor[text]"]').val(draftLangs[lang].content);
-            $('#id_content_editoreditable').html(draftLangs[lang].content);
+            $('[name="content_editor[text]"]').val(draftLangs[lang].content.text);
+            $('[name="content_editor[format]"]').val(draftLangs[lang].content.format);
+            $('[name="content_editor[itemid]"]').val(draftLangs[lang].content.itemid);
+            $('#id_content_editoreditable').html(draftLangs[lang].content.text);
         }
 
         return;
@@ -222,7 +228,11 @@ async function changeLang() {
 
     draftLangs[lang] = {
         header: undefined,
-        content: undefined
+        content: {
+            text: undefined,
+            format: undefined,
+            itemid: undefined
+        }
     };
 
     let requests = Ajax.call([{
@@ -240,10 +250,13 @@ async function changeLang() {
         draftLangs[lang].header = response.header;
     }
 
-    if (response.content) {
-        $('[name="content_editor[text]"]').val(response.content);
-        draftLangs[lang].content = response.content;
-        $('#id_content_editoreditable').html(response.content);
+    if (response.content_editor && response.content_editor.text) {
+        draftLangs[lang].content = response.content_editor;
+        $('[name="content_editor[text]"]').val(response.content_editor.text);
+        $('#id_content_editoreditable').html(response.content_editor.text);
+
+        $('[name="content_editor[format]"]').val(response.content_editor.format);
+        $('[name="content_editor[itemid]"]').val(response.content_editor.itemid);
     }
 }
 

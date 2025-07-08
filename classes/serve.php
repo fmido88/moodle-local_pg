@@ -81,6 +81,16 @@ class serve implements cacheable_object {
     protected int $id;
 
     /**
+     * If the multilang loaded or not.
+     * @var bool
+     */
+    protected bool $multilangloaded = false;
+    /**
+     * Multilang record id.
+     * @var int
+     */
+    protected int $langid;
+    /**
      * Page creation time.
      * @var int
      */
@@ -507,7 +517,7 @@ class serve implements cacheable_object {
      * @return bool
      */
     public function page_exists() {
-        global $DB, $ME, $CFG;
+        global $DB, $ME;
         if (isset($this->exist)) {
             return $this->exist;
         }
@@ -556,6 +566,9 @@ class serve implements cacheable_object {
      * @return string
      */
     public function get_title() {
+        if (!$this->multilangloaded) {
+            $this->load_current_lang_content(true);
+        }
         return format_string($this->header);
     }
 
@@ -578,9 +591,10 @@ class serve implements cacheable_object {
 
     /**
      * Load content according to the current language.
+     * @param bool $titleonly if to only load the title without the content
      * @return void
      */
-    public function load_current_lang_content() {
+    public function load_current_lang_content($titleonly = false) {
         global $DB;
         if (!$this->page_exists()) {
             return;
@@ -596,11 +610,19 @@ class serve implements cacheable_object {
 
         $langs = array_unique(array_merge($parents, [$lang]));
         [$langin, $langparams] = $DB->get_in_or_equal($langs, SQL_PARAMS_NAMED);
-        $sql = "SELECT id, header, content, lang
+
+        $fields = 'id, header, lang';
+        $notnullconditions = 'pl.header IS NOT NULL';
+        if (!$titleonly) {
+            $fields .= ', content';
+            $notnullconditions .= ' OR pl.content IS NOT NULL';
+        }
+
+        $sql = "SELECT $fields
                 FROM {local_pg_langs} pl
                 WHERE pl.lang $langin
                   AND pl.pageid = :pageid
-                  AND (pl.header IS NOT NULL OR pl.content IS NOT NULL)
+                  AND ($notnullconditions)
                   ORDER BY pl.header DESC, pl.id DESC";
         $params = ['pageid' => $this->id] + $langparams;
         $result = $DB->get_records_sql($sql, $params);
@@ -616,9 +638,11 @@ class serve implements cacheable_object {
             if (!empty($row->content) && (!$contentfound || $row->lang == $lang)) {
                 $contentfound = true;
                 $this->content = $row->content;
+                $this->langid = $row->id;
                 unset($this->formattedcontent);
             }
         }
+        $this->multilangloaded = true;
     }
     /**
      * Get the page content.
@@ -644,8 +668,8 @@ class serve implements cacheable_object {
             'pluginfile.php',
             $this->get_page_context()->id,
             'local_pg',
-            'pagecontent',
-            $this->id
+            empty($this->langid) ? helper::CONTENT_FILEAREA : helper::CUSTOMLANG_FILEAREA,
+            empty($this->langid) ? $this->id : $this->langid
         );
         self::render_content($content);
 
@@ -662,7 +686,7 @@ class serve implements cacheable_object {
      * @return void
      */
     public static function render_content(&$content, $context = []) {
-        global $OUTPUT, $USER, $SITE;
+        global $USER, $SITE;
         $mustache = mustache::get_mustache();
 
         $context = [

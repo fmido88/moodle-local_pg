@@ -18,6 +18,7 @@ namespace local_pg\output;
 
 use core_table\output\html_table;
 use html_writer;
+use local_pg\helper;
 use moodle_url;
 
 /**
@@ -277,7 +278,7 @@ class faq implements \renderable, \templatable {
             self::get_question_editor_options(),
             $this->get_context(),
             'local_pg',
-            'questions',
+            helper::FAQ_Q_FILEAREA,
             $data->id
         );
         $data = file_postupdate_standard_editor(
@@ -286,7 +287,7 @@ class faq implements \renderable, \templatable {
             self::get_answer_editor_options(),
             $this->get_context(),
             'local_pg',
-            'answers',
+            helper::FAQ_A_FILEAREA,
             $data->id
         );
         $data->usermodified = $USER->id;
@@ -410,7 +411,7 @@ class faq implements \renderable, \templatable {
             'pluginfile.php',
             $this->get_context()->id,
             'local_pg',
-            'questions',
+            helper::FAQ_Q_FILEAREA,
             $q->id
         );
         $q->question = format_text($q->question, $q->questionformat, ['context' => $this->get_context()]);
@@ -430,7 +431,7 @@ class faq implements \renderable, \templatable {
             'pluginfile.php',
             $this->get_context()->id,
             'local_pg',
-            'answers',
+            helper::FAQ_A_FILEAREA,
             $q->id
         );
         $q->answer = format_text($q->answer, $q->answerformat);

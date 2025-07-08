@@ -51,6 +51,26 @@ class helper {
     public const REQUIRE_AUTH = 4;
 
     /**
+     * Page content file area
+     * @var string
+     */
+    public const CONTENT_FILEAREA = 'pagecontent';
+    /**
+     * Page content in custom lang file area.
+     * @var string
+     */
+    public const CUSTOMLANG_FILEAREA = 'pagecontentlang';
+    /**
+     * FAQ Questions file area.
+     * @var string
+     */
+    public const FAQ_Q_FILEAREA = 'questions';
+    /**
+     * FAQ Answers filearea.
+     * @var string
+     */
+    public const FAQ_A_FILEAREA = 'answers';
+    /**
      * Cached visibility strings.
      * @var string[]
      */

@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use local_pg\helper;
 use local_pg\hook_callbacks;
 
 /**
@@ -36,10 +37,17 @@ use local_pg\hook_callbacks;
  * @return void
  */
 function local_pg_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload = false, array $options = []) {
-    global $CFG, $DB, $USER;
+    global $DB;
     $fs = get_file_storage();
 
-    if (!in_array($filearea, ['pagecontent', 'answers', 'questions'])) {
+    $allowedareas = [
+        helper::CONTENT_FILEAREA,
+        helper::CUSTOMLANG_FILEAREA,
+        helper::FAQ_A_FILEAREA,
+        helper::FAQ_Q_FILEAREA,
+    ];
+
+    if (!in_array($filearea, $allowedareas)) {
         send_file_not_found();
     }
 

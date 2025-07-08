@@ -20,6 +20,7 @@ use core_external\external_api;
 use core_external\external_function_parameters;
 use core_external\external_single_structure;
 use core_external\external_value;
+use local_pg\helper;
 
 /**
  * Class langs
@@ -61,10 +62,14 @@ class langs extends external_api {
             $params['pageid'] = $params['id'];
             unset($params['id']);
         }
-        $record = $DB->get_record($table, $params, 'header, content');
+        $record = $DB->get_record($table, $params, 'id, header, content, contentformat');
         $return = [
-            'header' => null,
-            'content' => null,
+            'header'         => null,
+            'content_editor' => [
+                'text'   => null,
+                'format' => null,
+                'itemid' => null,
+            ],
         ];
 
         if (!$record) {
@@ -74,7 +79,19 @@ class langs extends external_api {
             $return['header'] = $record->header;
         }
         if (!empty($record->content)) {
-            $return['content'] = $record->content;
+            $islangrecord = ($table === 'local_pg_langs');
+            $options = helper::get_editor_options();
+            $options['context'] = $context;
+            $record = file_prepare_standard_editor(
+                $record,
+                'content',
+                $options,
+                $context,
+                'local_pg',
+                $islangrecord ? helper::CUSTOMLANG_FILEAREA : helper::CONTENT_FILEAREA,
+                $record->id
+            );
+            $return['content_editor'] = $record->content_editor;
         }
         return $return;
     }
@@ -85,7 +102,13 @@ class langs extends external_api {
     public static function get_content_returns(): external_single_structure {
         return new external_single_structure([
             'header' => new external_value(PARAM_TEXT, 'The page header'),
-            'content' => new external_value(PARAM_RAW, 'The page content'),
+            'content_editor' => new external_single_structure(
+                [
+                    'text' => new external_value(PARAM_RAW, 'The page content'),
+                    'format' => new external_value(PARAM_INT, 'The editor format'),
+                    'itemid' => new external_value(PARAM_INT, 'The files item id'),
+                ], 'The content of the loaded page'
+            ),
         ]);
     }
 }

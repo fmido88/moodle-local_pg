@@ -14,6 +14,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use local_pg\helper;
+
 /**
  * FAQ page.
  *
@@ -67,7 +69,7 @@ if ((!empty($id) && $action !== 'view') || $action == 'add') {
                     $faq->get_question_editor_options(),
                     $context,
                     'local_pg',
-                    'questions',
+                    helper::FAQ_Q_FILEAREA,
                     $id
                 );
                 $default = file_prepare_standard_editor(
@@ -76,7 +78,7 @@ if ((!empty($id) && $action !== 'view') || $action == 'add') {
                     $faq->get_answer_editor_options(),
                     $context,
                     'local_pg',
-                    'answers',
+                    helper::FAQ_A_FILEAREA,
                     $id
                 );
                 $mform->set_data($default);
@@ -88,8 +90,8 @@ if ((!empty($id) && $action !== 'view') || $action == 'add') {
             if (optional_param('confirm', false, PARAM_BOOL) && confirm_sesskey()) {
                 $DB->delete_records('local_pg_faq', ['id' => $id]);
                 $fs = get_file_storage();
-                $fs->delete_area_files($context->id, 'local_pg', 'questions', $id);
-                $fs->delete_area_files($context->id, 'local_pg', 'answers', $id);
+                $fs->delete_area_files($context->id, 'local_pg', helper::FAQ_Q_FILEAREA, $id);
+                $fs->delete_area_files($context->id, 'local_pg', helper::FAQ_A_FILEAREA, $id);
                 redirect(new moodle_url('/local/pg/faq.php'));
             }
             $content = $OUTPUT->confirm(

@@ -46,7 +46,7 @@ class mustache {
      * @return \core\output\mustache_engine
      */
     public static function get_mustache(): mustache_engine {
-        global $CFG, $PAGE, $OUTPUT;
+        global $PAGE, $OUTPUT;
 
         if (empty(static::$mustache)) {
 

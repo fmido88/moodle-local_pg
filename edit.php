@@ -59,7 +59,15 @@ $options = helper::get_editor_options();
 $options['context'] = $context;
 
 if (!empty($page)) {
-    $page = file_prepare_standard_editor($page, 'content', $options, $context, 'local_pg', 'pagecontent', $page->id);
+    $page = file_prepare_standard_editor(
+        $page,
+        'content',
+        $options,
+        $context,
+        'local_pg',
+        helper::CONTENT_FILEAREA,
+        $page->id
+    );
 }
 
 $form = new \local_pg\form\page_edit(null, $customdata);
@@ -84,31 +92,52 @@ if ($data = $form->get_data()) {
     $cache = cache::make('local_pg', 'pages');
 
     if (!empty($data->id)) {
-        $data = file_postupdate_standard_editor($data, 'content', $options, $context, 'local_pg', 'pagecontent', $data->id);
 
         $cache->delete($page->shortname);
 
         $data->timemodified = time();
         $data->usermodified = $USER->id;
         if (empty($data->lang)) {
+            $data = file_postupdate_standard_editor(
+                $data,
+                'content',
+                $options,
+                $context,
+                'local_pg',
+                helper::CONTENT_FILEAREA,
+                $data->id
+            );
+
             helper::format_page_path($data);
             $DB->update_record('local_pg_pages', $data);
         } else {
             $langrecord = (object) [
-                'pageid' => $data->id,
-                'lang'   => $data->lang,
-                'content' => $data->content,
-                'header'  => $data->header,
+                'pageid'       => $data->id,
+                'lang'         => $data->lang,
+                'content'      => '',
+                'header'       => $data->header,
                 'timemodified' => $data->timemodified,
             ];
-            $oldrecord = $DB->get_record('local_pg_langs', ['pageid' => $data->id, 'lang' => $data->lang]);
+
+            $oldrecord = $DB->get_record('local_pg_langs', ['pageid' => $data->id, 'lang' => $data->lang], 'id');
             if ($oldrecord) {
                 $langrecord->id = $oldrecord->id;
-                $DB->update_record('local_pg_langs', $langrecord);
             } else {
                 $langrecord->timecreated = time();
-                $DB->insert_record('local_pg_langs', $langrecord);
+                $langrecord->id = $DB->insert_record('local_pg_langs', $langrecord);
             }
+
+            $data = file_postupdate_standard_editor(
+                $data,
+                'content',
+                $options,
+                $context,
+                'local_pg',
+                helper::CUSTOMLANG_FILEAREA,
+                $langrecord->id
+            );
+            $langrecord->content = $data->content;
+            $DB->update_record('local_pg_langs', $langrecord);
         }
 
     } else {
@@ -135,7 +164,15 @@ if ($data = $form->get_data()) {
 
         // Update to insert the contents.
         $context = local_pg\context\page::instance($record->id);
-        $data = file_postupdate_standard_editor($data, 'content', $options, $context, 'local_pg', 'pagecontent', $record->id);
+        $data = file_postupdate_standard_editor(
+            $data,
+            'content',
+            $options,
+            $context,
+            'local_pg',
+            helper::CONTENT_FILEAREA,
+            $record->id
+        );
         $data->id = $record->id;
 
         $DB->update_record('local_pg_pages', $data);
