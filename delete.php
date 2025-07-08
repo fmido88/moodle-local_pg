@@ -36,6 +36,7 @@ require_capability('local/pg:delete', $context);
 
 if ($confirm && confirm_sesskey()) {
     $DB->delete_records('local_pg_pages', ['id' => $id]);
+    $DB->delete_records('local_pg_langs', ['pageid' => $id]);
 
     $children = $DB->get_records('local_pg_pages', ['parent' => $id]);
     foreach ($children as $child) {
@@ -45,7 +46,6 @@ if ($confirm && confirm_sesskey()) {
         $DB->update_record('local_pg_pages', $child);
     }
 
-    $context = local_pg\context\page::instance($id);
     $context->delete();
 
     $cache = cache::make('local_pg', 'pages');
