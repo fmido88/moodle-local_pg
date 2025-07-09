@@ -24,16 +24,23 @@
  */
 
 /**
- * Custom code to be run on installing the plugin.
+ * Custom code to be run on installing the plugin we use it to migrate
+ * from the old plugin name local_page that is already installed in some sites
+ * to the new one local_pg.
+ * @return true
  */
 function xmldb_local_pg_install() {
     global $DB;
-    $dbman = $DB->get_manager();
+    $dbman  = $DB->get_manager();
     $tables = [
         'local_page_pages' => 'local_pg_pages',
         'local_page_faq'   => 'local_pg_faq',
         'local_page_langs' => 'local_pg_langs',
     ];
+
+    $fs          = get_file_storage();
+    $tobedeleted = [];
+
     // Migrate from the old plugin name to the new one.
     foreach ($tables as $old => $new) {
         if ($dbman->table_exists($old) && $dbman->table_exists($new)) {
@@ -52,9 +59,85 @@ function xmldb_local_pg_install() {
             }
 
             $records = $DB->get_records($old);
-            $DB->insert_records($new, $records);
-            $DB->delete_records($old);
+
+            if (($old == 'local_page_langs') || !class_exists('local_page\context\page')) {
+                $DB->insert_records($new, $records);
+                $tobedeleted[] = $old;
+                continue;
+            }
+
+            $filerecordfields = array_keys($DB->get_columns('files'));
+
+            foreach ($records as $oldrecord) {
+                $shortname = ($old == 'local_page_pages') ? $oldrecord->shortname : 'faq';
+
+                if (empty($shortname)) {
+                    continue;
+                }
+
+                $pageid = ($old == 'local_page_pages')
+                ? $oldrecord->id
+                : $DB->get_field('local_page_pages', 'id', ['shortname' => 'faq']);
+
+                if (empty($pageid)) {
+                    continue;
+                }
+
+                $context = local_page\context\page::instance($pageid, IGNORE_MISSING);
+
+                if (!$context) {
+                    continue;
+                }
+
+                if ($old == 'local_page_pages') {
+                    $newpageid = $newrecordid = $DB->insert_record($new, $oldrecord);
+                } else {
+                    $newpageid   = $DB->get_field('local_pg_pages', 'id', ['shortname' => $shortname]);
+                    $newrecordid = $DB->insert_record($new, $oldrecord);
+                }
+
+                $newcontext = local_pg\context\page::instance($newpageid);
+
+                // Old areas only.
+                $areas = ['pagecontent', 'answers', 'questions'];
+
+                foreach ($areas as $area) {
+                    if ($fs->is_area_empty($context->id, 'local_page', $area)) {
+                        continue;
+                    }
+                    $files = $fs->get_area_files($context->id, 'local_page', $area);
+
+                    foreach ($files as $oldfile) {
+                        if ($oldfile->is_directory()) {
+                            continue;
+                        }
+                        $newfile            = new stdClass();
+                        $newfile->component = 'local_pg';
+                        $newfile->contextid = $newcontext->id;
+                        $newfile->itemid    = $newrecordid;
+
+                        foreach ($filerecordfields as $field) {
+                            if (in_array($field, ['id', 'contextid', 'component', 'itemid'])) {
+                                continue;
+                            }
+                            $method = "get_{$field}";
+
+                            if (method_exists($oldfile, $method)) {
+                                $newfile->{$field} = $oldfile->{$method}();
+                            }
+                        }
+                        $fs->create_file_from_storedfile($newfile, $oldfile);
+                    }
+                }
+                $context->delete();
+            }
+            $tobedeleted[] = $old;
+        }
+
+        foreach ($tobedeleted as $oldtable) {
+            $DB->delete_records($oldtable);
         }
     }
+
     return true;
 }
