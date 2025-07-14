@@ -39,11 +39,13 @@ class page extends context {
      * @var int
      */
     public const LEVEL = LOCAL_PG_CONTEXT_LEVEL;
+
     /**
      * Page record from local_pg_pages table.
      * @var stdClass
      */
     public stdClass $instance;
+
     /**
      * Please use \local_pg\context\page::instance($pageid) if you need the instance of context.
      * Alternatively if you know only the context id use \core\context::instance_by_id($contextid)
@@ -74,6 +76,7 @@ class page extends context {
     public static function get_level_name() {
         return get_string('page');
     }
+
     /**
      * Returns human readable context identifier.
      *
@@ -96,6 +99,7 @@ class page extends context {
         }
         return $name;
     }
+
     /**
      * Returns the URL to view the context.
      *
@@ -109,6 +113,7 @@ class page extends context {
 
         return new moodle_url('/local/pg/index.php/' . $this->instance->shortname);
     }
+
     /**
      * Returns context instance database name.
      *
@@ -117,6 +122,7 @@ class page extends context {
     protected static function get_instance_table(): ?string {
         return 'local_pg_pages';
     }
+
     /**
      * Returns list of all role archetypes that are compatible
      * with role assignments in context level.
@@ -127,6 +133,7 @@ class page extends context {
     protected static function get_compatible_role_archetypes(): array {
         return ['manager'];
     }
+
     /**
      * Returns list of all possible parent context levels.
      * @since Moodle 4.2
@@ -136,6 +143,7 @@ class page extends context {
     public static function get_possible_parent_levels(): array {
         return [\core\context\system::LEVEL, self::LEVEL];
     }
+
     /**
      * Returns array of relevant context capability records.
      *
@@ -152,6 +160,7 @@ class page extends context {
 
         return $DB->get_records_list('capabilities', 'contextlevel', $levels, $sort);
     }
+
     /**
      * Returns page context instance.
      *
@@ -185,6 +194,7 @@ class page extends context {
 
         return false;
     }
+
     /**
      * Create missing context instances at course context level
      */
@@ -202,6 +212,7 @@ class page extends context {
         }
         $contextdata->close();
     }
+
     /**
      * Returns sql necessary for purging of stale context instances.
      *
@@ -276,6 +287,11 @@ class page extends context {
             return;
         }
 
+        $alllevels = \context_helper::get_all_levels();
+        if (isset($alllevels[self::LEVEL])) {
+            return;
+        }
+
         if (!is_array($CFG->custom_context_classes)) {
             $levels = @unserialize($CFG->custom_context_classes);
 
@@ -286,6 +302,7 @@ class page extends context {
             $levels = $CFG->custom_context_classes;
         }
 
+        \context_helper::reset_levels();
         if (isset($levels[self::LEVEL])) {
             // Already exists.
             return;
@@ -332,6 +349,8 @@ class page extends context {
 
         define('LOCAL_PG_CONTEXT_LEVEL', $level);
         set_config('contextlevel', $level, 'local_pg');
+
+        \context_helper::reset_levels();
         return $level;
     }
 }
