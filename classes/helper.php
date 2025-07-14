@@ -151,6 +151,9 @@ class helper {
         global $DB;
         $sort    = 'shortname ASC, path ASC, id ASC';
         $fields  = 'id, shortname, path, header';
+
+        // We only use the 0 level pages as parents.
+        // Todo: allow more nesting.
         $pages   = $DB->get_records('local_pg_pages', ['parent' => 0], $sort, $fields);
         $options = [
             0 => get_string('home'),
@@ -168,7 +171,9 @@ class helper {
     }
 
     /**
-     * Summary of format_page_path.
+     * Format the page path as \parent\page if it has a parent
+     * or \page if no parent exist.
+     *
      * @param  stdClass $data {shortname:string, parent:int}
      * @return string
      */
@@ -198,7 +203,7 @@ class helper {
         $pages = $DB->get_records('local_pg_pages', null, '', 'id, parent, shortname, path');
 
         foreach ($pages as $page) {
-            $oldpath = clone $page->path;
+            $oldpath = (string)$page->path;
             $newpath = self::format_page_path($page);
 
             if ($oldpath != $newpath) {
@@ -217,6 +222,7 @@ class helper {
         if (empty($css)) {
             return true;
         }
+
         $css = trim($css);
 
         $scss = new \core_scss();
