@@ -32,7 +32,7 @@ function xmldb_local_pg_uninstall() {
     $level = local_pg\context\page::LEVEL;
     $contexts = $DB->get_records('context', ['contextlevel' => $level], '', 'id');
     foreach ($contexts as $record) {
-        $context = local_page\context\page::instance_by_id($record->id, IGNORE_MISSING);
+        $context = local_pg\context\page::instance_by_id($record->id, IGNORE_MISSING);
         if ($context) {
             $context->delete();
         }
