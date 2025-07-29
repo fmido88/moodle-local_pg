@@ -5,3 +5,4 @@ samples/
 amd/src/load-sample.js
 amd/build/load-sample.min.js
 amd/build/load-sample.min.js.map
+.htaccess

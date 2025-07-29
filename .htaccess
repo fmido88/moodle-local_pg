@@ -12,5 +12,5 @@
 
 # If mod_rewrite is disabled, use ErrorDocument as a fallback
 <IfModule !mod_rewrite.c>
-    ErrorDocument 404 /mdl405/local/pg/index.php
+    ErrorDocument 404 /local/pg/index.php
 </IfModule>
