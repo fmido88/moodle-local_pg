@@ -251,11 +251,12 @@ class serve implements cacheable_object {
      * @return array
      */
     protected static function get_args() {
-        global $CFG, $ME;
-        if (strpos($ME, '/local/pg/') === 0) {
-            $url = new moodle_url($ME);
+        global $CFG, $FULLME;
+        $base = (new moodle_url('/local/pg/'))->get_path();
+        if (strpos($FULLME, $base) !== false) {
+            $url = new moodle_url($FULLME);
             $path = str_replace('\\', '/', $url->get_path());
-            $path = str_replace('/local/pg/', '', $path);
+            $path = str_replace($base, '', $path);
             $args = explode('/', $path);
             $args = array_filter($args);
             if (!empty($args)) {
@@ -332,8 +333,9 @@ class serve implements cacheable_object {
             $shortname = $DB->get_field('local_pg_pages', 'shortname', ['id' => $pageid]);
         }
 
-        if (!isset($shortname)) {
+        if (empty($shortname)) {
             $args = self::get_args();
+
             $shortname = array_pop($args) ?? null;
 
             // Todo: get the page by its path.

@@ -28,6 +28,19 @@ require_once('../../config.php');
 $id = optional_param('id', optional_param('page', null, PARAM_INT), PARAM_INT);
 $shortname = optional_param('shortname', null, PARAM_ALPHANUMEXT);
 
+if (!$id && !$shortname) {
+    $params = (new moodle_url($FULLME))->params();
+    $id = $params['id'] ?? $params['page'] ?? null;
+    $shortname = $params['shortname'] ?? null;
+    if ($id) {
+        $id = clean_param($id, PARAM_INT);
+    }
+
+    if ($shortname) {
+        $shortname = clean_param($shortname, PARAM_ALPHANUMEXT);
+    }
+}
+
 if (!$id && $shortname) {
     $id = $DB->get_field('local_pg_pages', 'id', ['shortname' => $shortname]);
 }
@@ -58,12 +71,18 @@ if (!$serve->page_exists()) {
     @header("HTTP/1.0 404 Not Found");
 
     echo $OUTPUT->header();
+
+    debugging("The page not found: shortname = $shortname id = $id", DEBUG_DEVELOPER);
+
     echo $OUTPUT->container_start();
     echo $OUTPUT->render_from_template('local_pg/404', []);
     echo $OUTPUT->container_end();
+
     echo $OUTPUT->footer();
     die;
 }
+
+http_response_code(200);
 
 $url = new moodle_url('/local/pg/index.php/' . $serve->get_page_shortname(), []);
 $PAGE->set_url($url);

@@ -28,6 +28,43 @@ use navigation_node;
  */
 class hook_callbacks {
     /**
+     * Statically save allowance state.
+     * @var bool
+     */
+    protected static bool $allowed;
+
+    /**
+     * Check if the the callbacks is allowed.
+     * it is not allowed on updates or scripts.
+     * @return bool
+     */
+    protected static function is_callback_allowed() {
+        global $DB;
+
+        if (isset(self::$allowed)) {
+            return self::$allowed;
+        }
+
+        if (AJAX_SCRIPT || CLI_SCRIPT || WS_SERVER || during_initial_install()) {
+            self::$allowed = false;
+
+            return self::$allowed;
+        }
+
+        $dbman = $DB->get_manager();
+
+        if (!$dbman->table_exists('local_pg_pages')) {
+            self::$allowed = false;
+
+            return self::$allowed;
+        }
+
+        self::$allowed = true;
+
+        return self::$allowed;
+    }
+
+    /**
      * Check slashed argument in home page to redirect to the required page.
      * @param  \core\hook\after_config $hook
      * @return void
@@ -35,10 +72,11 @@ class hook_callbacks {
     public static function after_config(\core\hook\after_config $hook) {
         global $FULLME;
 
-        if (AJAX_SCRIPT || CLI_SCRIPT || WS_SERVER || during_initial_install()) {
+        if (!self::is_callback_allowed()) {
             return;
         }
 
+        helper::write_htaccess();
         $current = new \moodle_url($FULLME);
         $home    = new \moodle_url('/');
 
@@ -57,6 +95,10 @@ class hook_callbacks {
      * @return void
      */
     public static function primary_extend(\core\hook\navigation\primary_extend $hook) {
+        if (!self::is_callback_allowed()) {
+            return;
+        }
+
         self::add_to_navigation($hook->get_primaryview());
     }
 
@@ -67,6 +109,11 @@ class hook_callbacks {
      */
     public static function secondary_extend(\core\hook\navigation\secondary_extend $hook) {
         global $PAGE;
+
+        if (!self::is_callback_allowed()) {
+            return;
+        }
+
         $view = $hook->get_secondaryview();
         self::add_to_navigation($view);
 
@@ -90,9 +137,15 @@ class hook_callbacks {
     public static function add_to_navigation(navigation_node $view, $all = false) {
         global $DB;
 
+        if (!self::is_callback_allowed()) {
+            return;
+        }
+
         $visible = helper::PUBLIC;
+
         if (isloggedin()) {
             $visible = helper::ALLOW_GUEST;
+
             if (!isguestuser()) {
                 $visible = helper::REQUIRE_AUTH;
             }
@@ -114,10 +167,8 @@ class hook_callbacks {
         $pages = $DB->get_records_sql($sql, $params);
 
         $currentspotted = false;
-
-        /** // phpcs:ignore moodle.Commenting.InlineComment.DocBlock
-         * @var array[navigation_node]
-         */
+        // phpcs:ignore moodle.Commenting.InlineComment.DocBlock
+        /** @var array[navigation_node] */
         $nodes = [];
 
         foreach ($pages as $k => $page) {
@@ -148,7 +199,7 @@ class hook_callbacks {
         foreach ($pages as $k => $page) {
             if (isset($nodes[$page->parent])) {
                 $serve = serve::make($page->id, false);
-                $node = $nodes[$page->parent]->add(
+                $node  = $nodes[$page->parent]->add(
                     $serve->get_title(),
                     $serve->get_page_url(),
                     navigation_node::TYPE_CUSTOM,
@@ -167,12 +218,17 @@ class hook_callbacks {
 
     /**
      * Add pages links to footer.
-     * @param \core\hook\output\before_standard_footer_html_generation $hook
+     * @param  \core\hook\output\before_standard_footer_html_generation $hook
      * @return void
      */
     public function add_to_footer(\core\hook\output\before_standard_footer_html_generation $hook) {
         global $PAGE;
-        $widget = new footer();
+
+        if (!self::is_callback_allowed()) {
+            return;
+        }
+
+        $widget   = new footer();
         $renderer = $PAGE->get_renderer('local_pg');
         $hook->add_html($renderer->render($widget));
     }
@@ -182,8 +238,9 @@ class hook_callbacks {
      * @param  string $shortname
      * @return bool
      */
-    public static function is_current($shortname) {
+    protected static function is_current($shortname) {
         global $FULLME, $DB;
+
         $current = new \moodle_url($FULLME);
         $path    = $current->get_path();
 
