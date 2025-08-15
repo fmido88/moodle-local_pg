@@ -1008,6 +1008,25 @@ class serve implements cacheable_object {
                 $hasbuttons = true;
             }
 
+            if (has_capability('moodle/role:assign', $this->get_page_context())) {
+                $params = ['contextid' => $this->get_page_context()->id, 'returnurl' => $this->get_page_url()];
+                $contextname = $this->get_page_context()->get_context_name();
+                echo html_writer::empty_tag('br');
+                echo html_writer::link(
+                    new moodle_url('/admin/roles/assign.php', $params),
+                    get_string('assignrolesin', 'core_role', $contextname)
+                );
+            }
+
+            if (has_capability('moodle/role:review', $this->get_page_context())) {
+                $params ??= ['contextid' => $this->get_page_context()->id, 'returnurl' => $this->get_page_url()];
+                echo html_writer::empty_tag('br');
+                echo html_writer::link(
+                                       new moodle_url('/admin/roles/permissions.php', $params),
+                                       get_string('permissions', 'core_role')
+                                    );
+            }
+
             if ($hasbuttons) {
                 echo html_writer::empty_tag('hr');
             }
