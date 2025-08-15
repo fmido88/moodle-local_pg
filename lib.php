@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+use core\output\pix_icon;
 use local_pg\helper;
 use local_pg\hook_callbacks;
 
@@ -70,4 +71,33 @@ function local_pg_extend_navigation(global_navigation $nav) {
     $homenav = $nav->find(SITEID, global_navigation::TYPE_COURSE);
 
     hook_callbacks::add_to_navigation($homenav);
+}
+
+/**
+ * Add adding page icon to the navbar.
+ * @return string
+ */
+function local_pg_render_navbar_output() {
+    global $OUTPUT, $PAGE;
+
+    if (!hook_callbacks::is_callback_allowed()) {
+        return '';
+    }
+
+    if (
+        !$PAGE->user_is_editing()
+        || !has_capability('local/pg:add', \context_system::instance())
+    ) {
+        return '';
+    }
+
+    $label = get_string('addpage', 'local_pg');
+    $icon  = $OUTPUT->action_icon(
+        new \moodle_url('/local/pg/edit.php'),
+        new pix_icon('i/file_plus', $label),
+        null,
+        ['class' => 'nav-link icon-no-margin'],
+    );
+
+    return html_writer::div($icon, 'nav-action');
 }

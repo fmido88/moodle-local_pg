@@ -38,7 +38,7 @@ class hook_callbacks {
      * it is not allowed on updates or scripts.
      * @return bool
      */
-    protected static function is_callback_allowed() {
+    public static function is_callback_allowed() {
         global $DB;
 
         if (isset(self::$allowed)) {
