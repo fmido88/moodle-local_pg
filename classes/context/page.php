@@ -89,14 +89,28 @@ class page extends context {
         global $DB;
 
         $name = '';
+        if ($withprefix) {
+            $name .= get_string('page') . ': ';
+        }
+
+        $options = ['context' => $this];
+
+        if ($escape) {
+            $options['escape'] = true;
+        }
+
         if (!empty($this->instance) && !empty($this->instance->header)) {
-            $name = format_string($this->instance->header);
+            $name .= $short ? format_string($this->instance->shortname, true, $options)
+                           : format_string($this->instance->header, true, $options);
         } else {
-            $header = $DB->get_field('local_pg_pages', 'header', ['id' => $this->instanceid]);
-            if ($header) {
-                $name = format_string($header);
+            $record = $DB->get_record('local_pg_pages', ['id' => $this->instanceid], 'header, shortname');
+
+            if ($record) {
+                $name .= $short ? format_string($record->shortname, true, $options)
+                               : format_string($record->header, true, $options);
             }
         }
+
         return $name;
     }
 
@@ -154,7 +168,6 @@ class page extends context {
         global $DB;
 
         $levels = [
-            \core\context\system::LEVEL,
             self::LEVEL,
         ];
 
